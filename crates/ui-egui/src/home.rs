@@ -121,6 +121,15 @@ pub fn show(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                     });
                 });
 
+            // Cloud storage sits under the local Open card. That card stays
+            // where it is. Drawn only where the host wired a service.
+            if crate::cloud::available(app) {
+                ui.add_space(26.0);
+                widgets::section_title(ui, tl!("Cloud"));
+                ui.add_space(8.0);
+                crate::cloud::open_page(app, ui);
+            }
+
             #[cfg(not(target_arch = "wasm32"))]
             {
                 ui.add_space(26.0);

@@ -13,7 +13,10 @@
 //!
 //! Methods (JSON in, JSON out):
 //! - `ui.state`: open documents, active document, page, zoom, page errors, mode, panels, dialog,
-//!   notice and observed window dimensions in logical points.
+//!   notice and observed window dimensions in logical points. `cloud` carries the whole cloud
+//!   state when a service is configured (see `cloud`): the account and its capabilities, the
+//!   folder being browsed, what is openable in it, incoming shares, a transfer in flight and
+//!   where the open document came from.
 //! - `ui.inspect {query?, role?, focused?, limit?}`: widgets in tree order with `id` (a string), `role`, `label`,
 //!   `value`, `rect` (points), `enabled`, `toggled`, `selected`, `clickable`, `focusable`, `focused`, `depth`.
 //! - `ui.click {id}` | `{label}` | `{x, y, button?}`: click a widget (by its AccessKit action) or a
@@ -727,6 +730,10 @@ impl Host for crate::PdfCraftApp {
             "progress": self.progress_notice.as_ref().map(|p| json!({ "label": p.label, "fraction": p.fraction })),
             "password_prompt": self.password_prompt.is_some(),
             "close_prompt": self.close_request.is_some(),
+            // The whole of the cloud state. That is the account, the folder
+            // being browsed, what is openable in it, incoming shares, a
+            // transfer in flight and where the open document came from.
+            "cloud": crate::cloud::status(self),
         })
     }
 

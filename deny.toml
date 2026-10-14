@@ -34,7 +34,15 @@ unknown-registry = "deny"
 unknown-git = "deny"
 # Shared UI components and spooler; Cargo.toml pins the immutable revision. craft-print pins
 # storytold's winprint fork (Windows printing, #1107) to an immutable revision of its own.
-allow-git = ["https://github.com/storytold/craft-libs", "https://github.com/storytold/winprint.rs"]
+# craft-ui and craft-cloud come from the craft-libs fork that carries the cloud pages, at the one
+# revision CollabCraft pins too. CollabCraft is the cloud service the Open and Save pages reach,
+# through its own client crate and the share backend beside it.
+allow-git = [
+    "https://github.com/storytold/craft-libs",
+    "https://github.com/storytold/winprint.rs",
+    "https://github.com/wdunn001/craft-libs",
+    "https://github.com/wdunn001/collabcraft",
+]
 
 [advisories]
 yanked = "warn"

@@ -9634,10 +9634,10 @@ area = "N"
 tier = "N/A"
 milestone = "none"
 status = "na"
-commands = []
+commands = ["file.save", "file.save_as"]
 tools = []
-evidence = []
-notes = "Adobe cloud; local files and native dialogs (pluggable storage later)"
+evidence = ["crates/ui-egui/tests/cloud_files.rs::opening_a_cloud_document_loads_its_pages_and_remembers_where_it_came_from", "crates/ui-egui/tests/cloud_files.rs::save_writes_back_under_the_version_it_was_opened_at", "crates/ui-egui/tests/cloud_files.rs::save_as_offers_the_cloud_account_beside_this_computer"]
+notes = "Adobe cloud itself is not supported. The pluggable alternative ships. With a CollabCraft service configured, Home grows a Cloud section listing your own files beside what other people shared with you. Save As offers that account beside this computer. A save writes back under the version the document was read at. A stored copy that has moved on refuses the write. The user is then offered a reload or a copy of their own. The bytes are asked for under the name and content type they are going to. A destination whose name or content type says it is something other than a PDF is refused, with a sentence pointing at Export a PDF. Without a service the application is local-only and offers nothing cloud-shaped. PdfCraft holds no provider credential and speaks no provider protocol."
 
 [[feature]]
 id = "misc.share-links"
@@ -9648,8 +9648,8 @@ milestone = "none"
 status = "na"
 commands = []
 tools = []
-evidence = []
-notes = "Adobe cloud; pluggable share provider"
+evidence = ["crates/ui-egui/tests/cloud_files.rs::the_title_bar_shows_who_is_signed_in_and_offers_share", "crates/ui-egui/tests/cloud_files.rs::working_together_opens_where_the_provider_says_to_go"]
+notes = "Adobe cloud itself is not supported. The pluggable share provider ships. A Share split button in the title bar opens the shared craft-ui dialog. That dialog invites people and makes links through the configured service. Every cloud document in the Open page carries the same action on its overflow menu. Both are drawn only where the service reports that the provider shares. Work together opens the conversation the provider names for that document."
 
 [[feature]]
 id = "misc.connected-storage"
@@ -9660,8 +9660,8 @@ milestone = "none"
 status = "na"
 commands = []
 tools = []
-evidence = []
-notes = "Adobe cloud; use OS file dialogs and synced folders, which can be pinned to Home (view.home-view)"
+evidence = ["crates/ui-egui/tests/cloud_files.rs::no_account_yet_is_an_offer_to_link_and_never_an_error", "crates/ui-egui/tests/cloud_files.rs::shared_with_me_is_hidden_when_the_provider_cannot_do_it"]
+notes = "Adobe's account list is not supported. One account ships, through the CollabCraft service. An account badge in the title bar signs in through the browser and offers to link storage. Every side of the Open page is drawn only where the service reported the capability behind it. Which provider sits behind the service is configured there and nowhere in PdfCraft. OS file dialogs and synced folders still work. A synced folder can be pinned to Home (view.home-view)."
 
 [[feature]]
 id = "misc.cross-device-sync"

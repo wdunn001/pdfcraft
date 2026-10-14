@@ -160,8 +160,23 @@ impl PdfCraftApp {
             "file.clear_recent" => self.recent.clear(),
             "file.pin_folder" => self.pin_folder_dialog(),
             "page.combine" => self.open_combine_tab(),
+            // A document that came from cloud storage is saved back there, over
+            // the entry it came from and under the version it was read at.
+            // Nothing is written to this computer for it.
+            "file.save" if crate::cloud::has_target(self) => {
+                if let Err(reason) = crate::cloud::save_active(self) {
+                    self.notify(reason);
+                }
+            }
             "file.save" => {
                 self.save_active(SaveTarget::InPlace);
+            }
+            // With a cloud service wired there is more than one answer to where
+            // a copy goes. Save As therefore asks first. Without one it is the
+            // system dialog it has always been.
+            "file.save_as" if crate::cloud::available(self) && active.is_some() => {
+                self.save_as_to_cloud = None;
+                self.dialog = Some(Dialog::SaveAs);
             }
             "file.save_as" => {
                 self.save_active(SaveTarget::As);

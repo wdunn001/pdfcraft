@@ -71,6 +71,8 @@ pub use sign_ui::{DigitalIdEntry, SignDraft, SignGraphic, SignStep};
 mod autoscroll;
 mod bidi;
 pub mod bulk_fields;
+/// Open and Save against cloud storage: PdfCraft's half of `craft_ui::cloud`.
+pub mod cloud;
 mod dialogs;
 mod edit_text_ui;
 mod editing;
@@ -292,6 +294,10 @@ pub enum Dialog {
     RedactApply,
     /// File ▸ Print.
     Print,
+    /// File ▸ Save As, where there is more than one answer to where: this
+    /// computer, or the cloud account. Only reached with a cloud service wired;
+    /// without one Save As is the system dialog it has always been.
+    SaveAs,
     /// File ▸ Revert confirmation.
     Revert,
     /// Link Properties.
@@ -778,6 +784,21 @@ pub struct PdfCraftApp {
     pub replace_draft: Option<files::ReplaceDraft>,
     /// The last web link the app asked the system to open (tests and automation).
     pub last_opened_url: Option<String>,
+    /// Open and Save against cloud storage. Nothing cloud-shaped is offered
+    /// anywhere until the host application connects a backend to it. That is
+    /// what a build with no service configured wants.
+    pub cloud: cloud::CloudFiles,
+    /// The bytes each cloud save in flight encoded (see [`cloud::Sent`]).
+    pub(crate) cloud_sent: cloud::Sent,
+    /// The share dialog, the same one every Craft app offers. It opens no
+    /// socket. The host application connects the half that does.
+    pub share: craft_ui::share::ShareDialog,
+    /// Who else is in the open document, beside the account badge.
+    pub presence: craft_ui::presence::PresenceBar,
+    /// File ▸ Save As. Whether the cloud account is the chosen destination.
+    /// `None` until the user picks. The document's own origin decides until
+    /// then.
+    pub(crate) save_as_to_cloud: Option<bool>,
     /// A document asked to open this address; the user hasn't answered yet (#90, #91).
     pub pending_link: Option<PendingLink>,
     /// An absolute GoToR target waiting for approval, before any target-file I/O (#1364).
@@ -1011,6 +1032,11 @@ impl PdfCraftApp {
             control: None,
             bookmark_rename: None,
             last_opened_url: None,
+            cloud: cloud::CloudFiles::new(),
+            cloud_sent: cloud::Sent::new(),
+            share: craft_ui::share::ShareDialog::new(),
+            presence: craft_ui::presence::PresenceBar::new().badges_only(),
+            save_as_to_cloud: None,
             pending_link: None,
             pending_remote_link: None,
             protect_draft: Default::default(),
@@ -1828,6 +1854,8 @@ impl PdfCraftApp {
             || self.pending_link.is_some()
             || self.pending_remote_link.is_some()
             || self.updates.open
+            || self.share.is_open()
+            || self.cloud.conflict.is_some()
     }
 
     /// Enable the UI control channel on `ctx` (opt-in; see [`control`]). Returns a client that
@@ -2766,6 +2794,10 @@ impl eframe::App for PdfCraftApp {
         // Notices raised outside `ui` (opened files, OS events, the control channel) translate too.
         let lang = i18n::Lang::from_pref(&self.language);
         i18n::set_current(lang);
+        // The cloud worker's answers, before anything reads or draws them. A
+        // read or a save finished on another thread and the window has not
+        // heard about it yet.
+        cloud::pump(self, ctx);
         #[cfg(not(target_arch = "wasm32"))]
         {
             if let Some(worker) = &self.open_worker {
@@ -2950,6 +2982,7 @@ impl eframe::App for PdfCraftApp {
                 },
             );
             dialogs::show(self, &ctx);
+            self.cloud_frame(&ctx);
             // Notices too: a refused field value or a failed save must be seen in full screen.
             self.show_progress(&ctx);
             widgets::toast(self, &ctx);
@@ -2991,6 +3024,7 @@ impl eframe::App for PdfCraftApp {
         self.process_pending_edits();
         palette::show(self, &ctx);
         dialogs::show(self, &ctx);
+        self.cloud_frame(&ctx);
         self.show_progress(&ctx);
         widgets::toast(self, &ctx);
         self.finish_render_frame(&ctx);
@@ -2998,6 +3032,54 @@ impl eframe::App for PdfCraftApp {
 }
 
 impl PdfCraftApp {
+    /// The cloud controls that belong to the whole window rather than to a
+    /// page: the share dialog, the save it may ask for, and the modal a refused
+    /// save puts up.
+    fn cloud_frame(&mut self, ctx: &egui::Context) {
+        // Unconditional, because this is also where the share service's answers
+        // are collected, which has to keep happening while the dialog is shut.
+        self.share.show(ctx);
+        self.share_save();
+        // Above the notices: a refused save has to be answered, and the answer
+        // decides what happens to the user's edits.
+        cloud::conflict_modal(self, ctx);
+    }
+
+    /// Carry out a save the share dialog asked for, and report the outcome back.
+    ///
+    /// Split into asking and answering because the save is asynchronous. The
+    /// dialog waits, showing its own progress, until an answer arrives.
+    fn share_save(&mut self) {
+        if let Some(request) = self.share.take_save_request() {
+            // One destination today. `request.destination` names which, and is
+            // carried through so a second provider needs no change here.
+            let _ = request.destination;
+            // What is typed in a form field is part of what is shared (#166).
+            if !cloud::CloudApp::ready_to_save(self) {
+                self.share.save_failed(crate::i18n::t("The document was not saved.").to_owned());
+                return;
+            }
+            match cloud::save_as(self, "/", &request.name) {
+                Ok(_) => self.cloud.sharing_save = true,
+                Err(reason) => self.share.save_failed(reason),
+            }
+        }
+        // The worker reports by clearing `busy`. A new origin means it landed.
+        if self.cloud.sharing_save && self.cloud.busy.is_none() {
+            self.cloud.sharing_save = false;
+            match cloud::origin(self) {
+                Some(origin) => {
+                    let (id, name) = (origin.entry.id.clone(), origin.entry.name.clone());
+                    self.share.saved(id, name);
+                }
+                None => {
+                    let reason = self.cloud.status.clone().unwrap_or_else(|| "the document was not saved".to_owned());
+                    self.share.save_failed(reason);
+                }
+            }
+        }
+    }
+
     fn finish_render_frame(&mut self, ctx: &egui::Context) {
         // The Combine grid's thumbnails, whichever tab shows (renders under way still finish).
         self.combine_thumbs_frame(ctx);

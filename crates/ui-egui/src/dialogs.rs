@@ -59,6 +59,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     let mut import_words = false;
     let mut print_go = false;
     let mut revert_now = false;
+    let mut save_as_local = false;
     let mut summarize_now = false;
     let mut optimize_now = false;
     let mut duplicate_now: Option<Edit> = None;
@@ -79,6 +80,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
             Dialog::Print => 820.0,
             Dialog::FieldProps | Dialog::BulkFieldProps => 600.0,
             Dialog::About => 780.0,
+            Dialog::SaveAs => 560.0,
             _ => 520.0,
         });
         match dialog {
@@ -758,6 +760,42 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                 });
                 return;
             }
+            // File ▸ Save As with a cloud service wired. Where comes first,
+            // then the folder and the name. This computer hands straight over
+            // to the system dialog, the one Save As uses without a service.
+            Dialog::SaveAs => {
+                let to_cloud = app.save_as_to_cloud.unwrap_or_else(|| crate::cloud::prefers_cloud(app));
+                ui.label(egui::RichText::new(tl!("Save As")).font(theme::semibold(18.0)));
+                ui.add_space(10.0);
+                widgets::section_title(ui, tl!("Where"));
+                // Named before anything is picked, so the destination reads as
+                // the user's own account.
+                crate::cloud::start(app);
+                let account = crate::cloud::destination_name(app);
+                if place_row(ui, &t, "monitor", tl!("This computer"), tl!("A folder on this computer"), !to_cloud).clicked() {
+                    app.save_as_to_cloud = Some(false);
+                }
+                if place_row(ui, &t, "cloud", &account, tl!("Your cloud account"), to_cloud).clicked() {
+                    app.save_as_to_cloud = Some(true);
+                }
+                ui.add_space(14.0);
+                if to_cloud {
+                    if crate::cloud::save_page(app, ui) {
+                        close = true;
+                    }
+                } else {
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if widgets::pill_button(ui, tl!("Browse…"), true).clicked() {
+                            save_as_local = true;
+                            close = true;
+                        }
+                        if widgets::pill_button(ui, tl!("Cancel"), false).clicked() {
+                            close = true;
+                        }
+                    });
+                }
+                return;
+            }
             Dialog::Revert => {
                 let name = app.active_ids().and_then(|(_, id)| app.session.get(id)).map(|d| d.name.clone()).unwrap_or_default();
                 ui.label(egui::RichText::new(tl!("Revert")).font(theme::semibold(18.0)));
@@ -1193,6 +1231,11 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     if revert_now {
         app.revert_active();
     }
+    // The system dialog, once this one is out of the way. A native picker
+    // opened from inside a modal would sit behind it.
+    if save_as_local {
+        app.save_active(crate::SaveTarget::As);
+    }
     if summarize_now {
         app.summarize_comments();
     }
@@ -1612,6 +1655,27 @@ fn password(app: &mut PdfCraftApp, ctx: &egui::Context) {
         Some(PasswordAnswer::Cancel) => app.submit_password(None),
         None => {}
     }
+}
+
+/// One destination on the Save As page: an icon, its name, a second line, and
+/// whether it is the one chosen.
+fn place_row(ui: &mut egui::Ui, t: &Tokens, icon: &str, name: &str, detail: &str, chosen: bool) -> egui::Response {
+    let (rect, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 46.0), egui::Sense::click());
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, name));
+    let fill = if chosen {
+        t.selected
+    } else if ui.rect_contains_pointer(rect) {
+        t.hover
+    } else {
+        egui::Color32::TRANSPARENT
+    };
+    if fill.a() > 0 {
+        ui.painter().rect_filled(rect, egui::CornerRadius::same(8), fill);
+    }
+    crate::icons::paint(ui, egui::Rect::from_min_size(rect.min + egui::vec2(10.0, 11.0), egui::Vec2::splat(24.0)), icon, 20.0, t.icon);
+    ui.painter().text(rect.min + egui::vec2(46.0, 15.0), egui::Align2::LEFT_CENTER, name, theme::medium(13.5), t.text);
+    ui.painter().text(rect.min + egui::vec2(46.0, 32.0), egui::Align2::LEFT_CENTER, detail, theme::regular(11.0), t.text_muted);
+    theme::hand(resp)
 }
 
 /// Permissions password prompt: lifts the restrictions of an open document (#995).

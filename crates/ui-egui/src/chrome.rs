@@ -67,10 +67,18 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                     app.combine_tab.focused = false;
                 }
                 // Keep the two icon buttons, Discord's text/padding and three gaps outside the scrolling tabs.
-                let controls_width = ui.fonts_mut(|f| f.layout_no_wrap("Discord".into(), theme::medium(13.0), t.text).size().x)
+                let mut controls_width = ui.fonts_mut(|f| f.layout_no_wrap("Discord".into(), theme::medium(13.0), t.text).size().x)
                     + 2.0 * button
                     + 50.0
                     + window_controls::width(&controls.right);
+                // The account badge, and Share where the provider offers it.
+                // Reserved here, or the tabs would grow under them.
+                if crate::cloud::available(app) {
+                    controls_width += button + 8.0;
+                    if app.share.available() {
+                        controls_width += ui.fonts_mut(|f| f.layout_no_wrap(tl!("Share").into(), theme::medium(13.0), t.text).size().x) + 54.0;
+                    }
+                }
                 // Open stays in sight after the tabs: its icon, text and padding, and the gaps around it.
                 let open_width = ui.fonts_mut(|f| f.layout_no_wrap(tl!("Open").into(), theme::medium(13.0), t.text).size().x) + 38.0 + 12.0;
                 let mut tabs_width = (ui.available_width() - controls_width - open_width).max(0.0);
@@ -269,6 +277,21 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                             window_controls::buttons(ui, &controls.right);
                         });
                         ui.add_space(window_controls::SIDE_GAP - 4.0);
+                    }
+                    // Who is signed in, who else is in the document, then
+                    // Share. Every office suite puts those in this corner, in
+                    // that order. Drawn first because this layout runs right
+                    // to left. Nothing at all without a cloud service, where a
+                    // badge that could sign nobody in would fail on use.
+                    crate::cloud::who(app, ui);
+                    if crate::cloud::shares(app) {
+                        ui.add_space(4.0);
+                        // A split button, drawn by craft-ui so every Craft app
+                        // offers the same one. Only the Save a Copy formats
+                        // under it are PdfCraft's own.
+                        if let Some(command) = crate::cloud::share_button(app, ui, &crate::cloud::copies()) {
+                            app.execute(&command);
+                        }
                     }
                     let (icon, label) = match app.theme_preference {
                         ThemePreference::System => ("monitor", tl!("Use system setting")),

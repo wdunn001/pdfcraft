@@ -11,6 +11,11 @@ workspace = true
 
 [dependencies]
 craft-ui = { workspace = true }
+# The vendor-neutral cloud types the Open and Save pages speak (a file entry, a
+# capability). Types and contracts only: the crate opens no socket and names no
+# provider, so this builds for the web too. The service is reached through the
+# backend the host application connects to `PdfCraftApp::cloud` (see `cloud`).
+craft-cloud = { workspace = true }
 pdfcraft-fonts = { workspace = true }
 pdfcraft-engine = { workspace = true }
 pdfcraft-cos = { workspace = true }
