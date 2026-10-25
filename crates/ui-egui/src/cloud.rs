@@ -220,6 +220,18 @@ impl CloudApp for PdfCraftApp {
         Some("The PDF is saved in the folder above. Annotations and form data are preserved.".to_owned())
     }
 
+    fn recents(&self) -> Vec<String> {
+        self.recent.iter().map(|r| r.path.clone()).collect()
+    }
+
+    fn open_recent(&mut self, path: &str) {
+        let _ = self.open_path(path);
+    }
+
+    fn browse_local(&mut self) {
+        let _ = self.open_dialog();
+    }
+
     fn style(&self, ui: &Ui) -> craft_ui::cloud::CloudStyle {
         let t = Tokens::get(ui.ctx());
         craft_ui::cloud::CloudStyle {
