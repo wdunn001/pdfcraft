@@ -131,12 +131,3 @@ egui-wgpu = { path = "vendor/egui-wgpu" }
 vello_common = { path = "vendor/vello_common" }
 
 
-[patch."https://github.com/wdunn001/craft-libs"]
-craft-ui = { path = "../gh-craft-libs/crates/ui" }
-craft-cloud = { path = "../gh-craft-libs/crates/cloud" }
-craft-esign = { path = "../gh-craft-libs/crates/esign" }
-
-[patch."https://github.com/wdunn001/craft-libs"]
-craft-ui = { path = "../gh-craft-libs/crates/ui" }
-craft-cloud = { path = "../gh-craft-libs/crates/cloud" }
-craft-esign = { path = "../gh-craft-libs/crates/esign" }
