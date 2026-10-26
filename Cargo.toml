@@ -13,22 +13,22 @@ repository = "https://github.com/storytold/pdfcraft"
 
 [workspace.dependencies]
 # Shared frontend components; engines remain independent of egui.
-craft-ui = { git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", rev = "ffdf0556cefc0e7c14ceb32bf4138609702c6f13", features = ["serde", "cloud", "esign"] }
+craft-ui = {git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", branch = "quasarke", features = ["serde", "cloud", "esign"]}
 # Provider-neutral cloud types (Entry, Capability, Permission). Types and contracts only: the
 # crate opens no socket and names no provider, so this builds for the web too.
-craft-cloud = { git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", rev = "ffdf0556cefc0e7c14ceb32bf4138609702c6f13" }
-craft-esign = { git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", rev = "ffdf0556cefc0e7c14ceb32bf4138609702c6f13" }
+craft-cloud = {git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", branch = "quasarke"}
+craft-esign = {git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", branch = "quasarke"}
 # How the desktop and browser apps reach CollabCraft. No provider credential or URL compiled in.
-craft-cloud-client = { git = "https://github.com/wdunn001/collab-craft", rev = "23a3b6612eb73a51d54139e25658c94689adbb06" }
+craft-cloud-client = {git = "https://github.com/wdunn001/collab-craft", branch = "quasarke"}
 # The share dialog's backend: the half that opens a socket, kept here so only one session lives
 # in the process and a sign-in through Open/Save reaches the share dialog too.
-collabcraft-share = { git = "https://github.com/wdunn001/collab-craft", rev = "23a3b6612eb73a51d54139e25658c94689adbb06" }
+collabcraft-share = {git = "https://github.com/wdunn001/collab-craft", branch = "quasarke"}
 # Quit the macOS way (#1136): Cmd+Q asks about unsaved changes, and closing quits through `terminate:`.
-craft-quit = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "f58bc1a3df490992d633393d0898af0588ce882c" }
+craft-quit = {git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", branch = "quasarke"}
 # Shared system spooler; document composition remains in pdfcraft-print.
-craft-print = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "666c358065261a2816b376fa3bb10538dbf53040" }
+craft-print = {git = "https://github.com/wdunn001/craft-libs", version = "0.1.0", branch = "quasarke"}
 # Whether a path stored in a document may be opened (GoToR link targets).
-craft-docpath = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "82a24b006eefa036b43c09a67fb9a3fbd17ffe63" }
+craft-docpath = {version = "0.1.0", git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
 # internal
 pdfcraft-geom = { path = "crates/geom", version = "0.13.0" }
 pdfcraft-filters = { path = "crates/filters", version = "0.13.0" }
@@ -136,7 +136,7 @@ craft-ui = { path = "../gh-craft-libs/crates/ui" }
 craft-cloud = { path = "../gh-craft-libs/crates/cloud" }
 craft-esign = { path = "../gh-craft-libs/crates/esign" }
 
-[patch."https://github.com/storytold/craft-libs"]
+[patch."https://github.com/wdunn001/craft-libs"]
 craft-ui = { path = "../gh-craft-libs/crates/ui" }
 craft-cloud = { path = "../gh-craft-libs/crates/cloud" }
 craft-esign = { path = "../gh-craft-libs/crates/esign" }
