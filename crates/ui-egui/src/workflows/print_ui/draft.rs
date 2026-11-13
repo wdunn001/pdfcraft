@@ -560,6 +560,9 @@ impl PrintDraft {
             // Set when the copy sent is made grey (`spooler_copy`, #5806).
             grey_pages: false,
             title: title.to_string(),
+            // The Windows driver dialog's DEVMODE. PdfCraft has no UI for it yet, so the
+            // printer's defaults apply, as before the field existed.
+            driver_settings: None,
             // Only for the printer the options were read from.
             options: match (&self.printer, &self.driver_options) {
                 (Some(p), Some((read_for, _))) if p == read_for => self.driver_choices.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),

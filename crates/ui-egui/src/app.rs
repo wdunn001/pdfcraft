@@ -974,6 +974,13 @@ impl PdfCraftApp {
                 // Cloud Open page: browse and select a file; dismisses once the doc is open.
                 Some(CloudPage::Open) => {
                     crate::cloud_page_shell(self, ui, |app, ui| {
+                        // The pages no longer draw a local browse themselves; offer it here so
+                        // the Open page still reaches files on this machine.
+                        if ui.button(tl!("Browse local files…")).clicked() {
+                            app.cloud_page = None;
+                            app.open_dialog();
+                        }
+                        ui.add_space(18.0);
                         crate::cloud::open_page(app, ui);
                     });
                 }
