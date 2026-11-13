@@ -15,13 +15,17 @@ pdfcraft-ui-egui = { workspace = true }
 craft-cloud-client = { workspace = true }
 # Share dialog backend for the browser build.
 collabcraft-share = { workspace = true }
+# The host messages (storytold/craft-libs): one contract and one bridge for the web builds.
+# The page command API (storytold/craft-libs#413): window.pdfcraft over the UI control channel.
+craft-web-api = { git = "https://github.com/storytold/craft-libs", rev = "fd5e2feff6ea25bed371a99cc732b3968d621505", version = "0.1.0" }
+craft-web-host = { git = "https://github.com/storytold/craft-libs", rev = "fd5e2feff6ea25bed371a99cc732b3968d621505", version = "0.1.0" }
 eframe = { workspace = true, features = ["default_fonts", "glow", "persistence", "accesskit"] }
-egui = { workspace = true }
+egui = { workspace = true, features = ["default_fonts", "monochrome_emoji_fonts"] }
 log = { workspace = true }
 serde_json = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlCanvasElement", "HtmlElement", "Location", "Url", "UrlSearchParams", "Response", "Event", "MessageEvent", "EventTarget", "Request", "RequestInit", "RequestCredentials"] }
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlCanvasElement", "HtmlElement", "Location", "Url", "UrlSearchParams", "Response", "Event", "MessageEvent", "EventTarget", "Request", "RequestInit", "RequestCredentials", "CustomEvent", "CustomEventInit"] }
 js-sys = "0.3"
